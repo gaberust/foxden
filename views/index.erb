@@ -1,0 +1,9 @@
+<ul>
+  <% if defined?(@posts) %>
+    <% @posts.each do |post| %>
+      <li>
+        <%= post.content %>
+      </li>
+    <% end %>
+  <% end %>
+</ul>

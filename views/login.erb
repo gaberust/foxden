@@ -1,0 +1,30 @@
+<div class="container" style="max-width:500px;height:90vh;">
+  <div class="row h-100 justify-content-center align-items-center">
+    <form class="col-12" action="/login" method="POST">
+      <fieldset>
+        <% if defined?(@messages) %>
+          <% @messages.each do |message| %>
+            <div class="alert alert-dismissible alert-danger">
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+              <%= message %>
+            </div>
+          <% end %>
+        <% end %>
+        <legend>Login</legend>
+        <div class="form-group">
+          <label for="inputUsername">Username</label>
+          <input <% if defined?(@username) %>value="<%= @username %>"<% end %> name="username" type="text" class="form-control" id="inputUsername" placeholder="Username">
+        </div>
+        <div class="form-group">
+          <label for="inputPassword">Password</label>
+          <input name="password" type="password" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary" type="submit">Login</button>
+          <button class="btn btn-primary" disabled>Do Not Click.</button>
+        </div>
+      </fieldset>
+      <p>This page is NOT vulnerable to SQL Injection.</p>
+    </form>
+  </div>
+</div>

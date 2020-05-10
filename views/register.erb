@@ -1,0 +1,36 @@
+<div class="container" style="max-width:500px;height:90vh;">
+  <div class="row h-100 justify-content-center align-items-center">
+    <form class="col-12" action="/register" method="POST">
+      <fieldset>
+        <% if defined?(@messages) %>
+          <% @messages.each do |message| %>
+            <div class="alert alert-dismissible alert-danger">
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+              <%= message %>
+            </div>
+          <% end %>
+        <% end %>
+        <legend>Register</legend>
+        <div class="form-group">
+          <label for="inputUsername">Username</label>
+          <input <% if defined?(@username_entry) %>value="<%= @username_entry %>"<% end %> name="username" type="text" class="form-control" id="inputUsername" placeholder="Username">
+        </div>
+        <div class="form-group">
+          <label for="inputKeycode">Keycode</label>
+          <input <% if defined?(@keycode_entry) %>value="<%= @keycode_entry %>"<% end %> name="keycode" type="text" class="form-control" id="inputKeycode" placeholder="Keycode">
+        </div>
+        <div class="form-group">
+          <label for="inputPassword">Password</label>
+          <input name="password" type="password" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+        <div class="form-group">
+          <label for="inputConfirmPassword">Confirm Password</label>
+          <input name="confirm_password" type="password" class="form-control" id="inputConfirmPassword" placeholder="Confirm Password">
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary" type="submit">Register</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
