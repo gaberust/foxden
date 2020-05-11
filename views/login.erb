@@ -1,6 +1,9 @@
 <div class="container" style="max-width:500px;height:90vh;">
   <div class="row h-100 justify-content-center align-items-center">
     <form class="col-12" action="/login" method="POST">
+      <% if defined?(@next) %>
+        <input type="hidden" name="next" value="<%= @next %>">
+      <% end %>
       <fieldset>
         <% if defined?(@messages) %>
           <% @messages.each do |message| %>
@@ -9,6 +12,12 @@
               <%= message %>
             </div>
           <% end %>
+        <% end %>
+        <% if defined?(@info) %>
+          <div class="alert alert-dismissible alert-info">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <%= @info %>
+          </div>
         <% end %>
         <legend>Login</legend>
         <div class="form-group">

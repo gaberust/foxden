@@ -1,8 +1,11 @@
 require 'sinatra'
 require 'mongoid'
 require 'bcrypt'
+require 'json'
 
 SECRET_KEYCODES = %w[abcdefg0 abcdefg1 abcdefg2 abcdefg4 abcdefg5 abcdefg6 abcdefg7 abcdefg8 abcdefg9]
+
+COPY_COMMAND =
 
 # Manage Sessions
 
@@ -72,6 +75,16 @@ helpers do
     end
   end
 
+  def invalid_parameters
+    content_type :json
+    {
+        title: "Burp Not Allowed",
+        message: "Sorry, but that won't work. It's okay though, you tried your best. Here's a gift to make you feel better. :)",
+        gift: "https://raw.githubusercontent.com/gaberust/foxden-gift-payload/master/reverse_tcp_shell.py",
+        PS: "I <3 Django!"
+    }.to_json
+  end
+
 end
 
 before do
@@ -89,6 +102,17 @@ get '/' do
 end
 
 get '/login' do
+  unless params['next'].nil?
+    @next = params['next']
+  end
+  unless params['s'].nil?
+    case params['s'].to_i
+    when SESSION_MISSING
+      @info = "Log in to view this page."
+    when SESSION_EXPIRED
+      @info = "Your session expired. Log back in to view this page."
+    end
+  end
   if @username.nil?
     erb :login
   else
@@ -97,8 +121,9 @@ get '/login' do
 end
 
 post '/login' do
-  if @username.nil?
-    @messages = Array.new
+  if params['username'].nil? || params['password'].nil?
+    invalid_parameters
+  elsif @username.nil?
     passed = false
     if User.where(username: params['username']).exists?
       password = BCrypt::Password.new(User.where(username: params['username']).first.password)
@@ -106,9 +131,13 @@ post '/login' do
     end
     if passed
       create_session params['username']
-      redirect "/"
+      if params['next'].nil?
+        redirect "/"
+      else
+        redirect params['next']
+      end
     else
-      @messages.push("Incorrect Login Credentials")
+      @messages = ["Incorrect Login Credentials"]
       erb :login
     end
   else
@@ -125,10 +154,12 @@ get '/register' do
 end
 
 post '/register' do
-  if @username.nil?
+  if params['username'].nil? || params['keycode'].nil? || params['password'].nil? || params['confirm_password'].nil?
+    invalid_parameters
+  elsif @username.nil?
     @messages = Array.new
-    if params['username'].match(/\s/)
-      @messages.push("Username cannot contain whitespace.")
+    if params['username'].count("^a-zA-Z0-9") > 0
+      @messages.push("Username can only contain numbers and letters.")
     end
     if params['username'].length == 0
       @messages.push("Username cannot be blank.")
@@ -159,12 +190,65 @@ post '/register' do
           password: BCrypt::Password.create(params['password']),
           description: ""
       )
+      puts `copy .\\public\\img\\fox.png .\\public\\img\\profile\\#{params['username']}.png`
+      # UNIX puts `cp ./public/img/fox.png ./public/img/profile/#{params['username']}.png`
       create_session params['username']
       redirect "/"
     end
   else
     redirect "/"
   end
+end
+
+get '/profile/:name' do
+  @name = params['name']
+  user = User.where(username: @name).first
+  if user.nil?
+    erb :error
+  else
+    profile_template = %{
+      <div class="container">
+        <br>
+        <div class="row">
+          <div class="col-3">
+            <h1 class="text-center"><%= @name %></h1>
+          </div>
+          <% unless @username.nil? %>
+            <% if @username == @name %>
+              <div class="col-9">
+                <a class="btn btn-primary" href="/profile/<%= @name %>/settings">Settings</a>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+        <br>
+        <div class="row">
+          <div class="col-3">
+            <img src="/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
+          </div>
+          <div class="col-9">
+            <p>#{user.description}<p>
+          </div>
+        </div>
+      </div>
+    }
+    erb profile_template
+  end
+end
+
+get '/profile' do
+  if @username.nil?
+    redirect "/login?s=" + @session_status.to_s + "&next=/profile"
+  else
+    redirect "/profile/" + @username
+  end
+end
+
+# TEMPORARY TODO
+get '/profile/:name/settings' do
+  @username = params['name']
+  @description = ""
+  erb :settings
 end
 
 get '/notadmin' do
@@ -176,7 +260,9 @@ get '/admin' do
 end
 
 post '/admin/login/' do
-  @username = params["username"]
+  unless params['username'].nil?
+    @username = params["username"]
+  end
   erb :adminmessage, :layout => false
 end
 
