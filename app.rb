@@ -2,21 +2,21 @@ require 'sinatra'
 require 'mongoid'
 require 'bcrypt'
 require 'json'
+require 'jwt'
 
 SECRET_KEYCODES = %w[abcdefg0 abcdefg1 abcdefg2 abcdefg4 abcdefg5 abcdefg6 abcdefg7 abcdefg8 abcdefg9]
+JWT_SECRET = "MySuperSecretJWTKey1234"
 
-COPY_COMMAND =
+RICK_ROLL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
 # Manage Sessions
 
 SESSION_LENGTH = 31536000 # One Year
-SESSION_ACCEPTED = 0
-SESSION_MISSING = 1
-SESSION_EXPIRED = 2
-SESSION_INVALID = 3
-
-Session = Struct.new(:username, :exp)
-$sessions = Hash.new
+TOKEN_ACCEPTED = 0
+TOKEN_MISSING = 1
+TOKEN_EXPIRED = 2
+TOKEN_INVALID = 3
+LOGGED_OUT = 4
 
 # Connect to MongoDB
 
@@ -46,31 +46,34 @@ end
 
 helpers do
 
-  def create_session(username)
-    exp = Time.now + SESSION_LENGTH
-    session_id = BCrypt::Password.create(username + ' ' + exp.to_s)
-    $sessions[session_id] = Session.new(username, exp)
+  def create_token(username)
+    token = JWT.encode(
+        { username: username, exp: Time.now.to_i + SESSION_LENGTH },
+        JWT_SECRET,
+        'HS256'
+    )
+    puts token
     response.set_cookie(
-        'session',
-        value: session_id,
-        expires: exp,
+        'token',
+        value: token,
+        expires: Time.now + SESSION_LENGTH * 2,
         httponly: true
     )
   end
-
-  def validate_session
-    session_id = request.cookies['session']
-    if session_id.nil?
-      return SESSION_MISSING, nil
+  
+  def validate_token
+    token = request.cookies['token']
+    if token.nil?
+      return TOKEN_MISSING, nil
     else
-      if $sessions.key?(session_id)
-        if Time.now < $sessions[session_id].exp
-          return SESSION_ACCEPTED, $sessions[session_id].username
-        else
-          return SESSION_EXPIRED, $sessions.delete(session_id).username
-        end
+      begin
+        payload = JWT.decode(token, JWT_SECRET, true, { algorithm: 'HS256' })[0]
+      rescue JWT::ExpiredSignature
+        return TOKEN_EXPIRED, nil
+      rescue JWT::DecodeError
+        return TOKEN_INVALID, nil
       else
-        return SESSION_INVALID, nil
+        return TOKEN_ACCEPTED, payload['username']
       end
     end
   end
@@ -81,17 +84,59 @@ helpers do
         title: "Burp Not Allowed",
         message: "Sorry, but that won't work. It's okay though, you tried your best. Here's a gift to make you feel better. :)",
         gift: "https://raw.githubusercontent.com/gaberust/foxden-gift-payload/master/reverse_tcp_shell.py",
-        PS: "I <3 Django!"
+        PS: "print('I <3 Django!')"
     }.to_json
+  end
+
+  def unauthorized_post_request
+    content_type :json
+    {
+        title: "Knock That Off",
+        message: "Are you seriously trying to bypass my super secure authentication system? You didn't actually think it would work did you?"
+    }.to_json
+  end
+
+  def block
+    response.set_cookie(
+        "gandalf",
+        value: "YOU SHALL NOT PAASSSSSSS!!!",
+        expires: Time.now + SESSION_LENGTH,
+        httponly: true
+    )
+    redirect RICK_ROLL
+  end
+
+  def shenanigans desc, op1, op2
+    temp = desc
+    output = ""
+    while true
+      first, middle, last = temp.partition op1
+      output << first
+      temp = last
+      if temp.include? op2
+        first, middle, last = temp.partition op2
+        #UNIX output << `python3 ./shenanigans.py #{first}`
+        output << `python ./shenanigans.py #{first}` #WINDOWS
+        temp = last
+      else
+        output << middle << last
+        break
+      end
+    end
+    output
   end
 
 end
 
 before do
-  @session_status, @username = validate_session
+  @token_status, @username = validate_token
 
   status 731
   headers 'Server' => ''
+
+  unless request.cookies['gandalf'].nil?
+    redirect RICK_ROLL
+  end
 end
 
 get '/' do
@@ -107,10 +152,12 @@ get '/login' do
   end
   unless params['s'].nil?
     case params['s'].to_i
-    when SESSION_MISSING
+    when TOKEN_MISSING
       @info = "Log in to view this page."
-    when SESSION_EXPIRED
+    when TOKEN_EXPIRED
       @info = "Your session expired. Log back in to view this page."
+    when LOGGED_OUT
+      @info = "You have been logged out."
     end
   end
   if @username.nil?
@@ -130,7 +177,7 @@ post '/login' do
       passed = password.is_password?(params['password'])
     end
     if passed
-      create_session params['username']
+      create_token params['username']
       if params['next'].nil?
         redirect "/"
       else
@@ -192,7 +239,7 @@ post '/register' do
       )
       puts `copy .\\public\\img\\fox.png .\\public\\img\\profile\\#{params['username']}.png`
       # UNIX puts `cp ./public/img/fox.png ./public/img/profile/#{params['username']}.png`
-      create_session params['username']
+      create_token params['username']
       redirect "/"
     end
   else
@@ -206,6 +253,22 @@ get '/profile/:name' do
   if user.nil?
     erb :error
   else
+    description = user.description
+    if description.include? "<script>"
+      block
+    elsif description.include? "{{"
+      tpl_input = shenanigans(description, "{{", "}}")
+    elsif description.include? "{%"
+      tpl_input = shenanigans(description, "{%", "%}")
+    elsif description.include? "${"
+      tpl_input = shenanigans(description, "${", "}")
+    elsif description.include? "a{*"
+      tpl_input = shenanigans(description, "a{*", "*}b")
+    elsif description.include? "{*"
+      tpl_input = shenanigans(description, "{*", "*}")
+    else
+      tpl_input = description
+    end
     profile_template = %{
       <div class="container">
         <br>
@@ -227,32 +290,133 @@ get '/profile/:name' do
             <img src="/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
           </div>
           <div class="col-9">
-            <p>#{user.description}<p>
+            <p>#{tpl_input}</p>
           </div>
         </div>
       </div>
     }
-    erb profile_template
+    begin
+      erb profile_template
+    rescue
+      ""
+    end
   end
 end
 
 get '/profile' do
   if @username.nil?
-    redirect "/login?s=" + @session_status.to_s + "&next=/profile"
+    redirect "/login?s=" + @token_status.to_s + "&next=/profile"
   else
     redirect "/profile/" + @username
   end
 end
 
-# TEMPORARY TODO
 get '/profile/:name/settings' do
-  @username = params['name']
-  @description = ""
-  erb :settings
+  if @username.nil?
+    redirect "/login?s=" + @token_status.to_s + "&next=/profile/#{params['name']}/settings"
+  elsif @username == params['name']
+    @description = User.where(username: @username).first.description
+    @description.gsub! "<", "&lt;"
+    @description.gsub! ">", "&gt;"
+    erb :settings
+  else
+    erb :error
+  end
+end
+
+post '/profile/:name/settings' do
+  if @username.nil? || @username != params['name']
+    unauthorized_post_request
+  elsif (not params['description_update'].nil?) && params['picture_update'].nil?
+    user = User.where(username: @username).first
+    if params['description'].nil?
+      invalid_parameters
+    else
+      @description = params['description']
+      @description.gsub! "&lt;", "<"
+      @description.gsub! "&gt;", ">"
+      user.description = @description
+      user.save!
+      @description.gsub! "<", "&lt;"
+      @description.gsub! ">", "&gt;"
+      @info = "Description updated successfully."
+      erb :settings
+    end
+  elsif (not params['picture_update'].nil?) && params['description_update'].nil?
+    if params['file'].nil?
+      @messages = ["You've gotta actually pick a file for that to work my dude. Gosh, this is basic computering."]
+    else
+      begin
+        file = params['file'][:tempfile]
+        File.open("./public/img/profile/#{@username}.png", 'wb') do |f|
+          f.write(file.read)
+        end
+        @info = "Profile picture updated successfully... I think."
+      rescue
+        @messages = ["I don't even know what you did, or how to mitigate it, but I sure am glad I used that try-catch block!"]
+      end
+    end
+    @description = User.where(username: @username).first.description
+    @description.gsub! "<", "&lt;"
+    @description.gsub! ">", "&gt;"
+    erb :settings
+  else
+    invalid_parameters
+  end
+end
+
+get '/profile/:name/password' do
+  if @username.nil?
+    redirect "/login?s=" + @token_status.to_s + "&next=/profile/#{params['name']}/password"
+  elsif @username == params['name']
+    erb :password
+  else
+    erb :error
+  end
+end
+
+post '/profile/:name/password' do
+  if @username.nil? or @username != params['name']
+    unauthorized_post_request
+  elsif params['old_password'].nil? || params['new_password'].nil? || params['confirm_password'].nil?
+    invalid_parameters
+  else
+    user = User.where(username: @username).first
+    @messages = Array.new
+    current_password = BCrypt::Password.new(user.password)
+    unless current_password.is_password?(params['old_password'])
+      @messages.push("Incorrect Password.")
+    end
+    if params['new_password'].length < 8
+      @messages.push("New password must be at least 8 characters long.")
+    end
+    if params['new_password'] != params['confirm_password']
+      @messages.push("Passwords do not match.")
+    end
+    if @messages.length > 0
+      erb :password
+    else
+      user.password = BCrypt::Password.create(params['new_password'])
+      user.save!
+      @info = "Password updated successfully."
+      @messages.push("&#x1F36A Keep your hands out of the cookie jar. They're hot! &#x1F36A")
+      erb :password
+    end
+  end
+end
+
+get '/logout' do
+  response.set_cookie(
+      'token',
+      value: "logged out",
+      expires: Time.now - SESSION_LENGTH,
+      httponly: true
+  )
+  redirect "/login?s=" + LOGGED_OUT.to_s
 end
 
 get '/notadmin' do
-  redirect "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  redirect RICK_ROLL
 end
 
 get '/admin' do
