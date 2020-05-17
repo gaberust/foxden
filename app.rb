@@ -11,7 +11,13 @@ RICK_ROLL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
 ENCODED_PICKLE = "gASVaAAAAAAAAAB9lCiMB21lc3NhZ2WUjDFZb3UganVzdCBlYXJuZWQgYSBUZXN0ZXIncyBSZXdhcmQhIEhlcmUncyBhIGhpbnQhlIwEaGludJSMG2h0dHBzOi8vZm94ZGVuLmNvbS9oaW50LnBuZ5R1Lg=="
 
-RESTRICTED = %w(; $ { } # ~ _ [ ])
+RESTRICTED = %w(& ; $ { } # ~ _ [ ])
+
+STATUSES = [701, 706, 707, 718, 720, 721, 722, 723, 725, 726,
+            727, 728, 732, 733, 736, 735, 737, 739, 750, 755,
+            756, 757, 763, 764, 767, 768, 711, 772, 773, 774,
+            775, 776, 777, 778, 783, 784, 786, 787, 788, 789,
+            791, 792, 796, 797, 798, 799]
 
 # Manage Sessions
 
@@ -120,6 +126,7 @@ helpers do
         RESTRICTED.each do |char|
           first.gsub! char, ""
         end
+        # TODO SWITCH IN PROD.
         #UNIX output << `python3 ./shenanigans.py #{first}`
         output << `python ./shenanigans.py #{first}` #WINDOWS
         temp = last
@@ -136,7 +143,8 @@ end
 before do
   @token_status, @username = validate_token
 
-  status 731
+  status STATUSES.sample
+  # TODO REMOVE IN PROD.
   headers 'Server' => ''
 
   unless request.cookies['gandalf'].nil?
@@ -144,15 +152,15 @@ before do
   end
 end
 
-# TODO
 get '/' do
-  @post_count = Post.count
-  @posts = Post.where(:post_id.gte => @post_count - 40)
+  @posts = Post.where(:post_id.gt => Post.count - 20).order_by(post_id: :desc)
 
+  @include_script = true
   erb :index
 end
 
 get '/posts' do
+  status 200
   if params['lower'].nil?
     lower = -1
   else
@@ -170,6 +178,7 @@ get '/posts' do
 end
 
 post '/post' do
+  status 200
   if @username.nil?
     unauthorized_post_request
   elsif params['content'].nil?
@@ -184,20 +193,28 @@ post '/post' do
     content_type :json
     content = params['content']
     content.gsub!("&", "&amp;")
-        .gsub!("<", "&lt;")
-        .gsub!(">", "&gt;")
-        .gsub!('"', "&quot;")
-        .gsub!("'", "&#x27;")
-        .gsub!("/", "&#x2F;")
+    content.gsub!("<", "&lt;")
+    content.gsub!(">", "&gt;")
+    content.gsub!('"', "&quot;")
+    content.gsub!("'", "&#x27;")
+    content.gsub!("/", "&#x2F;")
     id = Post.count
-    Post.create!(
-        post_id: id,
-        content: content,
-        author: @username
-    )
-    {
-        success: true
-    }.to_json
+    begin
+      Post.create!(
+          post_id: id,
+          content: content,
+          author: @username
+      )
+    rescue
+      {
+          success: false,
+          message: "Something went wrong, I dunno &#x1F937"
+      }.to_json
+    else
+      {
+          success: true
+      }.to_json
+    end
   end
 end
 
@@ -286,16 +303,22 @@ post '/register' do
       @keycode_entry = params['keycode']
       erb :register
     else
-      User.create!(
-          keycode: params['keycode'],
-          username: params['username'],
-          password: BCrypt::Password.create(params['password']),
-          description: ""
-      )
-      puts `copy .\\public\\img\\fox.png .\\public\\img\\profile\\#{params['username']}.png`
-      # UNIX puts `cp ./public/img/fox.png ./public/img/profile/#{params['username']}.png`
-      create_token params['username']
-      redirect "/welcome"
+      begin
+        User.create!(
+            keycode: params['keycode'],
+            username: params['username'],
+            password: BCrypt::Password.create(params['password']),
+            description: ""
+        )
+        # TODO SWITCH IN PROD.
+        puts `copy .\\public\\static\\img\\fox.png .\\public\\static\\img\\profile\\#{params['username']}.png`
+        # UNIX puts `cp ./public/static/img/fox.png ./public/static/img/profile/#{params['username']}.png`
+      rescue
+        erb :error
+      else
+        create_token params['username']
+        redirect "/welcome"
+      end
     end
   else
     redirect "/"
@@ -350,7 +373,7 @@ get '/profile/:name' do
         <br>
         <div class="row">
           <div class="col-3">
-            <img src="/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
+            <img src="/static/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
           </div>
           <div class="col-9">
             <p>#{tpl_input}</p>
@@ -380,11 +403,11 @@ get '/profile/:name/settings' do
   elsif @username == params['name']
     @description = User.where(username: @username).first.description
     @description.gsub!("&", "&amp;")
-        .gsub!("<", "&lt;")
-        .gsub!(">", "&gt;")
-        .gsub!('"', "&quot;")
-        .gsub!("'", "&#x27;")
-        .gsub!("/", "&#x2F;")
+    @description.gsub!("<", "&lt;")
+    @description.gsub!(">", "&gt;")
+    @description.gsub!('"', "&quot;")
+    @description.gsub!("'", "&#x27;")
+    @description.gsub!("/", "&#x2F;")
     erb :settings
   else
     erb :error
@@ -401,21 +424,27 @@ post '/profile/:name/settings' do
     else
       @description = params['description']
       @description.gsub!("&amp;", "&")
-          .gsub!("&lt;", "<")
-          .gsub!("&gt;", ">")
-          .gsub!('&quot;', '"')
-          .gsub!("&#x27;", "'")
-          .gsub!("&#x2F;", "/")
+      @description.gsub!("&lt;", "<")
+      @description.gsub!("&gt;", ">")
+      @description.gsub!('&quot;', '"')
+      @description.gsub!("&#x27;", "'")
+      @description.gsub!("&#x2F;", "/")
       user.description = @description
-      user.save!
-      @description.gsub!("&", "&amp;")
-          .gsub!("<", "&lt;")
-          .gsub!(">", "&gt;")
-          .gsub!('"', "&quot;")
-          .gsub!("'", "&#x27;")
-          .gsub!("/", "&#x2F;")
-      @info = "Description updated successfully."
-      erb :settings
+      begin
+        user.save!
+      rescue
+        @messages = ["Congratulations, you killed the database."]
+      else
+        @info = "Description updated successfully."
+      ensure
+        @description.gsub!("&", "&amp;")
+        @description.gsub!("<", "&lt;")
+        @description.gsub!(">", "&gt;")
+        @description.gsub!('"', "&quot;")
+        @description.gsub!("'", "&#x27;")
+        @description.gsub!("/", "&#x2F;")
+        erb :settings
+      end
     end
   elsif (not params['picture_update'].nil?) && params['description_update'].nil?
     if params['file'].nil?
@@ -423,7 +452,7 @@ post '/profile/:name/settings' do
     else
       begin
         file = params['file'][:tempfile]
-        File.open("./public/img/profile/#{@username}.png", 'wb') do |f|
+        File.open("./public/static/img/profile/#{@username}.png", 'wb') do |f|
           f.write(file.read)
         end
         @info = "Profile picture updated successfully... I think."
@@ -433,11 +462,11 @@ post '/profile/:name/settings' do
     end
     @description = User.where(username: @username).first.description
     @description.gsub!("&", "&amp;")
-        .gsub!("<", "&lt;")
-        .gsub!(">", "&gt;")
-        .gsub!('"', "&quot;")
-        .gsub!("'", "&#x27;")
-        .gsub!("/", "&#x2F;")
+    @description.gsub!("<", "&lt;")
+    @description.gsub!(">", "&gt;")
+    @description.gsub!('"', "&quot;")
+    @description.gsub!("'", "&#x27;")
+    @description.gsub!("/", "&#x2F;")
     erb :settings
   else
     invalid_parameters
@@ -479,17 +508,23 @@ post '/profile/:name/password' do
       erb :password
     else
       user.password = BCrypt::Password.create(params['new_password'])
-      user.save!
-      @info = "Password updated successfully."
-      @messages.push("&#x1F36A Keep your hands out of the cookie jar. They're hot! &#x1F36A")
-      response.set_cookie(
-          'rickpickle',
-          value: ENCODED_PICKLE,
-          path: "/",
-          expires: Time.now + SESSION_LENGTH,
-          httponly: true
-      )
-      erb :password
+      begin
+        user.save!
+      rescue
+        @messages.push("Congratulations, you killed the database.")
+      else
+        @info = "Password updated successfully."
+        @messages.push("&#x1F36A Keep your hands out of the cookie jar. They're hot! &#x1F36A")
+        response.set_cookie(
+            'rickpickle',
+            value: ENCODED_PICKLE,
+            path: "/",
+            expires: Time.now + SESSION_LENGTH,
+            httponly: true
+        )
+      ensure
+        erb :password
+      end
     end
   end
 end
