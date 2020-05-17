@@ -139,6 +139,12 @@ helpers do
 end
 
 before do
+  unless request.path == '/cookies'
+    unless request.cookies['cookies_accepted'] == 'true'
+      redirect "/cookies?next=" + request.path
+    end
+  end
+            
   @token_status, @username = validate_token
 
   status STATUSES.sample
@@ -146,6 +152,28 @@ before do
   unless request.cookies['gandalf'].nil?
     redirect RICK_ROLL
   end
+end
+
+get '/cookies' do
+  unless params['next'].nil?
+    @next = params['next']
+  end
+  erb :cookies
+end
+
+post '/cookies' do
+  if params['next'].nil?
+    @next = "/"
+  else
+    @next = params['next']
+  end
+  response.set_cookie(
+      "cookies_accepted",
+      value: "true",
+      expires: Time.now + SESSION_LENGTH,
+      httponly: true
+  )
+  redirect @next
 end
 
 get '/' do
