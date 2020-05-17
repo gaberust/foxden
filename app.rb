@@ -9,6 +9,10 @@ JWT_SECRET = "MySuperSecretJWTKey1234"
 
 RICK_ROLL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
+ENCODED_PICKLE = "gASVaAAAAAAAAAB9lCiMB21lc3NhZ2WUjDFZb3UganVzdCBlYXJuZWQgYSBUZXN0ZXIncyBSZXdhcmQhIEhlcmUncyBhIGhpbnQhlIwEaGludJSMG2h0dHBzOi8vZm94ZGVuLmNvbS9oaW50LnBuZ5R1Lg=="
+
+RESTRICTED = %w(; $ { } # ~ _ [ ])
+
 # Manage Sessions
 
 SESSION_LENGTH = 31536000 # One Year
@@ -38,8 +42,7 @@ class Post
 
   field :post_id, type: Integer
   field :content, type: String
-
-  has_one :user
+  field :author, type: String
 end
 
 # Define Application Routes
@@ -52,7 +55,6 @@ helpers do
         JWT_SECRET,
         'HS256'
     )
-    puts token
     response.set_cookie(
         'token',
         value: token,
@@ -115,6 +117,9 @@ helpers do
       temp = last
       if temp.include? op2
         first, middle, last = temp.partition op2
+        RESTRICTED.each do |char|
+          first.gsub! char, ""
+        end
         #UNIX output << `python3 ./shenanigans.py #{first}`
         output << `python ./shenanigans.py #{first}` #WINDOWS
         temp = last
@@ -139,11 +144,61 @@ before do
   end
 end
 
+# TODO
 get '/' do
   @post_count = Post.count
   @posts = Post.where(:post_id.gte => @post_count - 40)
 
   erb :index
+end
+
+get '/posts' do
+  if params['lower'].nil?
+    lower = -1
+  else
+    lower = params['lower'].to_i
+  end
+  if params['upper'].nil?
+    upper = Post.count
+  else
+    upper = params['upper'].to_i
+  end
+  @posts = Post.where(:post_id.gt => lower)
+               .where(:post_id.lt => upper)
+               .order_by(post_id: :desc)
+  erb :posts, :layout => false
+end
+
+post '/post' do
+  if @username.nil?
+    unauthorized_post_request
+  elsif params['content'].nil?
+    invalid_parameters
+  elsif params['content'].strip.empty?
+    content_type :json
+    {
+        success: false,
+        message: "Post content cannot be empty."
+    }.to_json
+  else
+    content_type :json
+    content = params['content']
+    content.gsub!("&", "&amp;")
+        .gsub!("<", "&lt;")
+        .gsub!(">", "&gt;")
+        .gsub!('"', "&quot;")
+        .gsub!("'", "&#x27;")
+        .gsub!("/", "&#x2F;")
+    id = Post.count
+    Post.create!(
+        post_id: id,
+        content: content,
+        author: @username
+    )
+    {
+        success: true
+    }.to_json
+  end
 end
 
 get '/login' do
@@ -240,10 +295,18 @@ post '/register' do
       puts `copy .\\public\\img\\fox.png .\\public\\img\\profile\\#{params['username']}.png`
       # UNIX puts `cp ./public/img/fox.png ./public/img/profile/#{params['username']}.png`
       create_token params['username']
-      redirect "/"
+      redirect "/welcome"
     end
   else
     redirect "/"
+  end
+end
+
+get '/welcome' do
+  if @username.nil?
+    erb :error
+  else
+    erb :welcome
   end
 end
 
@@ -316,8 +379,12 @@ get '/profile/:name/settings' do
     redirect "/login?s=" + @token_status.to_s + "&next=/profile/#{params['name']}/settings"
   elsif @username == params['name']
     @description = User.where(username: @username).first.description
-    @description.gsub! "<", "&lt;"
-    @description.gsub! ">", "&gt;"
+    @description.gsub!("&", "&amp;")
+        .gsub!("<", "&lt;")
+        .gsub!(">", "&gt;")
+        .gsub!('"', "&quot;")
+        .gsub!("'", "&#x27;")
+        .gsub!("/", "&#x2F;")
     erb :settings
   else
     erb :error
@@ -333,12 +400,20 @@ post '/profile/:name/settings' do
       invalid_parameters
     else
       @description = params['description']
-      @description.gsub! "&lt;", "<"
-      @description.gsub! "&gt;", ">"
+      @description.gsub!("&amp;", "&")
+          .gsub!("&lt;", "<")
+          .gsub!("&gt;", ">")
+          .gsub!('&quot;', '"')
+          .gsub!("&#x27;", "'")
+          .gsub!("&#x2F;", "/")
       user.description = @description
       user.save!
-      @description.gsub! "<", "&lt;"
-      @description.gsub! ">", "&gt;"
+      @description.gsub!("&", "&amp;")
+          .gsub!("<", "&lt;")
+          .gsub!(">", "&gt;")
+          .gsub!('"', "&quot;")
+          .gsub!("'", "&#x27;")
+          .gsub!("/", "&#x2F;")
       @info = "Description updated successfully."
       erb :settings
     end
@@ -357,8 +432,12 @@ post '/profile/:name/settings' do
       end
     end
     @description = User.where(username: @username).first.description
-    @description.gsub! "<", "&lt;"
-    @description.gsub! ">", "&gt;"
+    @description.gsub!("&", "&amp;")
+        .gsub!("<", "&lt;")
+        .gsub!(">", "&gt;")
+        .gsub!('"', "&quot;")
+        .gsub!("'", "&#x27;")
+        .gsub!("/", "&#x2F;")
     erb :settings
   else
     invalid_parameters
@@ -387,6 +466,9 @@ post '/profile/:name/password' do
     unless current_password.is_password?(params['old_password'])
       @messages.push("Incorrect Password.")
     end
+    if current_password.is_password?(params['new_password']) && @messages.length == 0 && params['new_password'] == params['confirm_password']
+      @messages.push("New password cannot be the same as your old password, dummy.")
+    end
     if params['new_password'].length < 8
       @messages.push("New password must be at least 8 characters long.")
     end
@@ -400,8 +482,24 @@ post '/profile/:name/password' do
       user.save!
       @info = "Password updated successfully."
       @messages.push("&#x1F36A Keep your hands out of the cookie jar. They're hot! &#x1F36A")
+      response.set_cookie(
+          'rickpickle',
+          value: ENCODED_PICKLE,
+          path: "/",
+          expires: Time.now + SESSION_LENGTH,
+          httponly: true
+      )
       erb :password
     end
+  end
+end
+
+get '/hint.png' do
+  if request.cookies['rickpickle'] == ENCODED_PICKLE
+    content_type 'image/png'
+    File.open('./hint.png', "rb").read
+  else
+    erb :error
   end
 end
 

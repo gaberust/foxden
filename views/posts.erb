@@ -1,0 +1,14 @@
+<% unless @posts.nil? %>
+  <% @posts.each do |post| %>
+    <div class="card border-primary mb-3" data-pid="<%= post.post_id.to_s %>">
+      <div class="card-header">
+        <a href="/profile/<%= post.author %>"><%= post.author %></a>
+      </div>
+      <div class="card-body">
+        <p class="card-text">
+          <%= post.content.gsub("\n", "<br>") %>
+        </p>
+      </div>
+    </div>
+  <% end %>
+<% end %>
