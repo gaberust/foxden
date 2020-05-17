@@ -6,6 +6,7 @@ require 'jwt'
 
 SECRET_KEYCODES = %w[]
 JWT_SECRET = ""
+
 ENCODED_PICKLE = "gASVaAAAAAAAAAB9lCiMB21lc3NhZ2WUjDFZb3UganVzdCBlYXJuZWQgYSBUZXN0ZXIncyBSZXdhcmQhIEhlcmUncyBhIGhpbnQhlIwEaGludJSMG2h0dHBzOi8vZm94ZGVuLmNvbS9oaW50LnBuZ5R1Lg=="
 
 RICK_ROLL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
