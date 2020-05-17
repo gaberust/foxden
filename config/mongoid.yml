@@ -1,6 +1,6 @@
 development:
   clients:
     default:
-      uri: mongodb+srv://foxden:nochickensallowed@cluster0-hjsza.mongodb.net/test?retryWrites=true&w=majority
+      uri: MONGO_CONNECTION_STRING_HERE
       options:
         server_selection_timeout: 5
