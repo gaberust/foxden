@@ -126,9 +126,7 @@ helpers do
         RESTRICTED.each do |char|
           first.gsub! char, ""
         end
-        # TODO SWITCH IN PROD.
-        #UNIX output << `python3 ./shenanigans.py #{first}`
-        output << `python ./shenanigans.py #{first}` #WINDOWS
+        output << `python3 ./shenanigans.py #{first}`
         temp = last
       else
         output << middle << last
@@ -144,8 +142,6 @@ before do
   @token_status, @username = validate_token
 
   status STATUSES.sample
-  # TODO REMOVE IN PROD.
-  headers 'Server' => ''
 
   unless request.cookies['gandalf'].nil?
     redirect RICK_ROLL
@@ -310,9 +306,8 @@ post '/register' do
             password: BCrypt::Password.create(params['password']),
             description: ""
         )
-        # TODO SWITCH IN PROD.
-        puts `copy .\\public\\static\\img\\fox.png .\\public\\static\\img\\profile\\#{params['username']}.png`
-        # UNIX puts `cp ./public/static/img/fox.png ./public/static/img/profile/#{params['username']}.png`
+        puts `mkdir -p ./public/static/img/profile`
+        puts `cp ./public/static/img/fox.png ./public/static/img/profile/#{params['username']}.png`
       rescue
         erb :error
       else
