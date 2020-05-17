@@ -1,0 +1,20 @@
+<div class="container" style="max-width:500px;height:90vh;">
+  <div class="row h-100 justify-content-center align-items-center">
+    <form class="col-12" action="/cookies" method="POST">
+      <% if defined?(@next) %>
+        <input type="hidden" name="next" value="<%= @next %>">
+      <% end %>
+      <fieldset>
+        <legend>Cookie Agreement</legend>
+        <div class="form-group">
+          <h4>This site uses cookies. We do not store any personal data in cookies,
+              nor do we collect any personal data. None of your data is shared with
+              any other entity or service. Do you agree to the use of cookies?</h4>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary" type="submit">I agree to the use of cookies.</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
