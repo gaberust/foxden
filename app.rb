@@ -11,7 +11,7 @@ ENCODED_PICKLE = "gASVaAAAAAAAAAB9lCiMB21lc3NhZ2WUjDFZb3UganVzdCBlYXJuZWQgYSBUZX
 
 RICK_ROLL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
-RESTRICTED = %w(& ; $ { } # ~ _ [ ])
+RESTRICTED = %w(! & ; $ { } # ~ _ [ ])
 
 STATUSES = [701, 706, 707, 718, 720, 721, 722, 723, 725, 726,
             727, 728, 732, 733, 736, 735, 737, 739, 750, 755,
