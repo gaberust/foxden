@@ -1,0 +1,14 @@
+[Unit]
+Description=Unicorn Rack Server
+
+[Service]
+SyslogIdentifier=foxden-unicorn
+User=foxden
+PIDFile=/var/www/foxden/tmp/pids/unicorn.pid
+WorkingDirectory=/var/www/foxden
+
+ExecStart=unicorn -c /var/www/foxden/unicorn.rb -E production
+ExecStop=cat /var/www/foxden/tmp/pids/unicorn.pid | xargs kill -QUIT
+
+[Install]
+WantedBy=multi-user.target
