@@ -1,3 +1,5 @@
+cd /var/www/foxden
+
 sudo apt update
 sudo apt -y upgrade
 
@@ -20,21 +22,19 @@ sudo apt -y install build-essential ruby-full git nginx
 
 sudo gem install bundler
 
-sudo mkdir -p /var/www
-
-cd /var/www
-
-# TODO chmod/chown
-
-git clone https://github.com/gaberust/foxden.git
-
-cd foxden
+sudo chown foxden:foxden /var/www/foxden
+sudo chmod 444 /var/www/foxden
+sudo mkdir -p /var/www/foxden/public/static/img/profile
+sudo chmod 644 /var/www/foxden/public/static/img/profile
 
 bundler install
 
 sudo cp misc/nginx.conf /etc/nginx/nginx.conf
 
-# TODO create, start, and enable unicorn systemd service
+sudo cp misc/foxden.service /etc/systemd/system/foxden.service
+sudo systemctl daemon-reload
+sudo systemctl start foxden
+sudo systemctl enable foxden
 
 sudo systemctl start nginx
 sudo systemctl enable nginx
