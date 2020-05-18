@@ -3,6 +3,6 @@ development:
     default:
       database: FOXDEN
       hosts:
-        - localhost: 27017
+        - localhost:27017
       options:
         server_selection_timeout: 1
