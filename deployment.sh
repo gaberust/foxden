@@ -18,7 +18,7 @@ sudo apt -y install mongodb-org
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
-sudo apt -y install build-essential ruby-full git nginx
+sudo apt -y install build-essential ruby-full nginx
 
 sudo gem install bundler
 
