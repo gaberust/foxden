@@ -1,6 +1,8 @@
 development:
   clients:
     default:
-      uri: MONGO_CONNECTION_STRING_HERE
+      database: FOXDEN
+      hosts:
+        - localhost: 27017
       options:
-        server_selection_timeout: 5
+        server_selection_timeout: 1
