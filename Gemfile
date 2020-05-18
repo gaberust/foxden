@@ -1,4 +1,4 @@
-source 'https://rubygems.org' do
+source 'http://rubygems.org' do
   gem 'sinatra'
   gem 'mongoid'
   gem 'bcrypt'
