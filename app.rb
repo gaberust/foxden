@@ -534,9 +534,6 @@ class FoxDen < Sinatra::Base
         user.password = BCrypt::Password.create(params['new_password'])
         begin
           user.save!
-        rescue
-          @messages.push("Congratulations, you killed the database.")
-        else
           @info = "Password updated successfully."
           @messages.push("&#x1F36A Keep your hands out of the cookie jar. They're hot! &#x1F36A")
           response.set_cookie(
@@ -546,9 +543,10 @@ class FoxDen < Sinatra::Base
               expires: Time.now + SESSION_LENGTH,
               httponly: true
           )
-        ensure
-          erb :password
+        rescue
+          @messages.push("Congratulations, you killed the database.")
         end
+        erb :password
       end
     end
   end
