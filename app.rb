@@ -458,19 +458,17 @@ class FoxDen < Sinatra::Base
         user.description = @description
         begin
           user.save!
+          @info = "Description updated successfully."
         rescue
           @messages = ["Congratulations, you killed the database."]
-        else
-          @info = "Description updated successfully."
-        ensure
-          @description.gsub!("&", "&amp;")
-          @description.gsub!("<", "&lt;")
-          @description.gsub!(">", "&gt;")
-          @description.gsub!('"', "&quot;")
-          @description.gsub!("'", "&#x27;")
-          @description.gsub!("/", "&#x2F;")
-          erb :settings
         end
+        @description.gsub!("&", "&amp;")
+        @description.gsub!("<", "&lt;")
+        @description.gsub!(">", "&gt;")
+        @description.gsub!('"', "&quot;")
+        @description.gsub!("'", "&#x27;")
+        @description.gsub!("/", "&#x2F;")
+        erb :settings
       end
     elsif (not params['picture_update'].nil?) && params['description_update'].nil?
       if params['file'].nil?
