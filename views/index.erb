@@ -17,6 +17,7 @@
         <div class="card border-primary mb-3" data-pid="<%= post.post_id.to_s %>">
           <div class="card-header">
             <a href="/profile/<%= post.author %>"><%= post.author %></a>
+            <p><%= post.date %></p>
           </div>
           <div class="card-body">
             <p class="card-text">
