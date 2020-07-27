@@ -31,7 +31,7 @@ class FoxDen < Sinatra::Base
 
   # Connect to MongoDB
 
-  Mongoid.load!(File.join(File.dirname(__FILE__), 'config', 'mongoid.yml'))
+  Mongoid.load!(File.join(File.dirname(__FILE__), 'config', 'mongoid.yml'), :production)
 
   # Define MongoDB Models
 
@@ -230,7 +230,7 @@ class FoxDen < Sinatra::Base
             post_id: id,
             content: content,
             author: @username
-            date: DateTime.new.strftime("%m/%d/%Y %I:%M%p")
+            date: DateTime.now.strftime("%m/%d/%Y %I:%M%p")
         )
       rescue
         {
