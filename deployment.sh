@@ -46,7 +46,7 @@ sudo chown -R foxden:foxden /var/www/foxden
 
 # Install Gem Dependencies
 sudo gem install bundler unicorn
-sudo -u foxden bundle install --gemfile=/var/www/foxden/Gemfile
+sudo -u foxden bundler install --gemfile=/var/www/foxden/Gemfile
 
 # Finished
 echo "Run foxden-start and foxden-stop to start and stop the application."
