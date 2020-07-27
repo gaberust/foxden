@@ -43,6 +43,7 @@ sudo mkdir -p /var/www/foxden/log
 sudo chown -R foxden:foxden /var/www/foxden
 
 # Install Gem Dependencies
+sudo gem install bundler unicorn
 sudo -u foxden bundle install --gemfile=/var/www/foxden/Gemfile
 
 # Finished
