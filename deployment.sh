@@ -34,7 +34,7 @@ sudo mv /var/www/foxden/misc/foxden-start /usr/bin/foxden-start
 sudo chmod +x /usr/bin/foxden-start
 sudo mv /var/www/foxden/misc/foxden-stop /usr/bin/foxden-stop
 sudo chmod +x /usr/bin/foxden-stop
-sudo rmdir /var/www/misc
+sudo rmdir /var/www/foxden/misc
 
 # Create Necessary Directory Structures
 sudo mkdir -p /var/www/foxden/tmp/sockets
