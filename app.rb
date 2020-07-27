@@ -50,6 +50,7 @@ class FoxDen < Sinatra::Base
     field :post_id, type: Integer
     field :content, type: String
     field :author, type: String
+    field :date, type: String
   end
 
   # Define Application Routes
@@ -229,6 +230,7 @@ class FoxDen < Sinatra::Base
             post_id: id,
             content: content,
             author: @username
+            date: DateTime.new.strftime("%m/%d/%Y %I:%M%p")
         )
       rescue
         {
