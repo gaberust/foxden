@@ -229,7 +229,7 @@ class FoxDen < Sinatra::Base
         Post.create!(
             post_id: id,
             content: content,
-            author: @username
+            author: @username,
             date: DateTime.now.strftime("%m/%d/%Y %I:%M%p")
         )
       rescue
