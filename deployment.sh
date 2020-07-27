@@ -12,6 +12,10 @@ sudo chown -R foxden:foxden /home/foxden
 # Install The Things
 sudo apt -y install gnupg build-essential ruby-full nginx git
 
+# Stop And Disable Nginx
+sudo systemctl disable nginx
+sudo systemctl stop nginx
+
 # Configure And Enable UFW
 sudo ufw allow OpenSSH
 sudo ufw allow "Nginx HTTP"
