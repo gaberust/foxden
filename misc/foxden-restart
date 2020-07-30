@@ -1,0 +1,4 @@
+#!/bin/bash
+
+foxden-stop
+foxden-start
