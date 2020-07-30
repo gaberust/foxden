@@ -2,6 +2,7 @@
   <% @posts.each do |post| %>
     <div class="card border-primary mb-3" data-pid="<%= post.post_id.to_s %>">
       <div class="card-header">
+        <img src="/static/img/profile/<%= post.author %>.png" class="img-thumbnail" style="width:100px;height:auto;">
         <a href="/profile/<%= post.author %>"><%= post.author %></a>
         <p><%= post.date %></p>
       </div>
