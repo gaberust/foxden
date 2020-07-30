@@ -3,8 +3,11 @@ require 'mongoid'
 require 'bcrypt'
 require 'json'
 require 'jwt'
+require 'net/http'
 
 class FoxDen < Sinatra::Base
+  LOGGER_URI = URI("http://127.0.0.1:10101/")
+  
   SECRET_KEYCODES = %w[ERCE6c77Iz xDwFZIkn95 5CYK9T7Iuz lAlug2Uct4 6qxOAI3Nu6 UFMqsQS9T5 Cbl1V43r1J 2YQ6Wy628P c80rkEREP3 teF6UVO3O4]
   JWT_SECRET = "IT9RY49ihtKVsMez5im5grBb3OzNQAYA"
 
@@ -141,6 +144,12 @@ class FoxDen < Sinatra::Base
   end
 
   before do
+    log_req = Net::HTTP::Post.new(LOGGER_URI, 'Content-Type' => 'application/json')
+    log_req.body = request.to_json
+    Net::HTTP.start(LOGGER_URI.hostname, LOGGER_URI.port) do |http|
+      http.request(log_req)
+    end
+    
     unless request.path == '/cookies'
       unless request.cookies['cookies_accepted'] == 'true'
         redirect "/cookies?next=" + request.path
