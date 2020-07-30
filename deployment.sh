@@ -60,7 +60,7 @@ sudo mkdir -p /var/www/foxden/log
 sudo chown -R foxden:foxden /var/www/foxden
 
 # Install Gem Dependencies
-sudo gem install --no-document bundler unicorn sinatra mongoid bcrypt json jwt
+sudo gem install --no-document unicorn sinatra mongoid bcrypt json jwt
 
 # Finished
 echo "Run foxden-start and foxden-stop to start and stop the application."
