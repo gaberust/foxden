@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 sudo -u foxden unicorn -c /var/www/foxden/unicorn.rb -E production -D
 systemctl start nginx
