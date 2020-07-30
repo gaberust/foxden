@@ -17,7 +17,7 @@ mkdir -p /home/foxden
 chown -R foxden:foxden /home/foxden
 
 # Install The Things
-apt -y install gnupg build-essential ruby-full nginx ufw python3
+apt -y install gnupg build-essential ruby-full nginx
 
 # Stop And Disable Nginx
 systemctl disable nginx
