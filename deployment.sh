@@ -1,5 +1,17 @@
 #!/usr/bin/bash
 
+# Check If Running As Root
+if [ $(id -u) = 0 ]; then
+    echo "BAD ROOT!"
+    exit 1
+fi
+
+# Download Source Code
+while [ ! -d "./foxden" ]
+do
+    git clone https://github.com/gaberust/foxden.git
+done
+
 # Update System
 sudo apt update
 sudo apt -y upgrade
@@ -29,8 +41,7 @@ sudo apt -y install mongodb-org
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
-# Download Source Code
-git clone https://github.com/gaberust/foxden.git
+# Copy Source Code To Correct Destinations
 sudo mkdir -p /var/www
 sudo mv foxden /var/www/foxden
 sudo mv /var/www/foxden/misc/nginx.conf /etc/nginx/nginx.conf
