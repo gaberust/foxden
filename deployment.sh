@@ -44,6 +44,8 @@ mv /var/www/foxden/misc/foxden-start /usr/bin/foxden-start
 chmod +x /usr/bin/foxden-start
 mv /var/www/foxden/misc/foxden-stop /usr/bin/foxden-stop
 chmod +x /usr/bin/foxden-stop
+mv /var/www/foxden/misc/foxden-restart /usr/bin/foxden-restart
+chmod +x /usr/bin/foxden-restart
 rmdir /var/www/foxden/misc
 
 # Create Necessary Directory Structures
