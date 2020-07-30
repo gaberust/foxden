@@ -1,4 +1,9 @@
-#!/usr/bin/bash
+#!/bin/bash
+
+# Update System, Install Git
+apt update
+apt -y upgrade
+apt install -y git
 
 # Download Source Code
 while [ ! -d "./foxden" ]
@@ -6,17 +11,13 @@ do
     git clone https://github.com/gaberust/foxden.git
 done
 
-# Update System
-apt update
-apt -y upgrade
-
 # Create Foxden System User
 useradd --system foxden
 mkdir -p /home/foxden
 chown -R foxden:foxden /home/foxden
 
 # Install The Things
-apt -y install gnupg build-essential ruby-full nginx git
+apt -y install gnupg build-essential ruby-full nginx
 
 # Stop And Disable Nginx
 systemctl disable nginx
