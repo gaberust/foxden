@@ -402,7 +402,7 @@ class FoxDen < Sinatra::Base
               <img src="/static/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
             </div>
             <div class="col-9">
-              <p>#{tpl_input}</p>
+              <pre>#{tpl_input}</pre>
             </div>
           </div>
         </div>
@@ -455,7 +455,6 @@ class FoxDen < Sinatra::Base
         @description.gsub!('&quot;', '"')
         @description.gsub!("&#x27;", "'")
         @description.gsub!("&#x2F;", "/")
-        @description.gsub!("\n", "<br>")
         user.description = @description
         begin
           user.save!
