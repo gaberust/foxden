@@ -3,7 +3,8 @@
     <fieldset>
       <legend>New Post</legend>
       <div class="form-group">
-        <textarea class="form-control" id="newPost" rows="3" style="margin-top:0px;margin-bottom:0px;he>      </div>
+        <textarea class="form-control" id="newPost" rows="3" style="margin-top:0px;margin-bottom:0px;height:150px;">
+      </div>
       <div class="form-group">
         <button class="btn btn-primary" id="postButton">Post</button>
       </div>
@@ -15,7 +16,7 @@
       <% @posts.each do |post| %>
         <div class="card border-primary mb-3" data-pid="<%= post.post_id.to_s %>">
           <div class="card-header pt-4 pl-4">
-            <span style="display: flex; flex-direction: row; align-items: center;"><img src="/static/img/profile/<%= post.author %>.png" class="img-thumbnail rounded-circle" >
+            <span style="display: flex; flex-direction: row; align-items: center;"><img src="/static/img/profile/<%= post.author %>.png" class="img-thumbnail rounded-circle" style="width:100px; height: auto;">
             <a href="/profile/<%= post.author %>" class="ml-4"><%= post.author %></a></span>
             <p class="mt-4 ml-2"><%= post.date %></p>
           </div>
