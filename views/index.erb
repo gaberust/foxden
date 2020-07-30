@@ -15,7 +15,8 @@
       <% @posts.each do |post| %>
         <div class="card border-primary mb-3" data-pid="<%= post.post_id.to_s %>">
           <div class="card-header pt-4 pl-4">
-            <img src="/static/img/profile/<%= post.author %>.png" class="img-thumbnail rounded-circle" >            <a href="/profile/<%= post.author %>" class="ml-4"><%= post.author %></a>
+            <span style="display: flex; flex-direction: row; align-items: center;"><img src="/static/img/profile/<%= post.author %>.png" class="img-thumbnail rounded-circle" >
+            <a href="/profile/<%= post.author %>" class="ml-4"><%= post.author %></a></span>
             <p class="mt-4 ml-2"><%= post.date %></p>
           </div>
           <div class="card-body">
