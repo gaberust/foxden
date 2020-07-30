@@ -455,6 +455,7 @@ class FoxDen < Sinatra::Base
         @description.gsub!('&quot;', '"')
         @description.gsub!("&#x27;", "'")
         @description.gsub!("&#x2F;", "/")
+        @description.gsub!("\n", "<br>")
         user.description = @description
         begin
           user.save!
