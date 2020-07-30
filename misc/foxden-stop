@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 systemctl stop nginx
 cat /var/www/foxden/tmp/pids/unicorn.pid | xargs kill -QUIT
