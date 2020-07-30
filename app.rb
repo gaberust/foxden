@@ -402,7 +402,7 @@ class FoxDen < Sinatra::Base
               <img src="/static/img/profile/<%= @name %>.png" style="width:100%;" alt="<%= @name %>'s Profile Picture">
             </div>
             <div class="col-9">
-              <pre>#{tpl_input}</pre>
+              <pre style="padding: 2rem;">#{tpl_input}</pre>
             </div>
           </div>
         </div>
