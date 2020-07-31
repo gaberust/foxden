@@ -13,8 +13,6 @@ done
 
 # Create Foxden System User
 useradd --system foxden
-mkdir -p /home/foxden
-chown -R foxden:foxden /home/foxden
 
 # Install The Things
 apt -y install gnupg build-essential ruby-full nginx
