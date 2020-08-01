@@ -23,7 +23,7 @@ systemctl stop nginx
 
 # Configure And Enable UFW
 ufw allow OpenSSH
-ufw allow "Nginx HTTP"
+ufw allow "Nginx Full"
 ufw enable
 
 # Install, Start, And Enable MongoDB
